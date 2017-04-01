@@ -1,0 +1,938 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+//#include <windows.h>
+//#include <mmsystem.h>
+#include <GL/glut.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#define TORSO_HEIGHT 5.0
+#define TORSO_RADIUS 1.3
+/*#define TORSO_X -7
+#define TORSO_Y 5.0
+#define TORSO_Z -2*/
+#define HEAD_HEIGHT 1.7
+#define HEAD_RADIUS 1.3
+/*#define HEAD_HEIGHT 1.7
+#define HEAD_RADIUS 1.3
+ #define TORSO_RADIUS 1.3
+#define HEAD_X -7
+#define HEAD_Y 4
+#define HEAD_Z -1*/
+#define UPPER_ARM_HEIGHT 3.0
+#define LOWER_ARM_HEIGHT 2.0
+#define UPPER_ARM_RADIUS 0.65
+#define LOWER_ARM_RADIUS 0.5
+#define LOWER_LEG_HEIGHT 3.0
+#define UPPER_LEG_HEIGHT 3.0
+#define UPPER_LEG_RADIUS 0.65
+#define LOWER_LEG_RADIUS 0.5
+#define SHOULDER_RADIUS 0.85
+#define JOINT_RADIUS 0.85
+int light_flag = 0;
+typedef float point[3];
+GLfloat seconds;
+GLuint texture[4]; //the array for our texture
+static GLfloat theta[11] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,
+180.0,0.0,180.0,0.0}; /* initial joint angles */
+GLfloat theta_min[11];
+GLfloat theta_max[11];
+GLfloat theta_freq[11];
+GLfloat knees_y, knees_z;
+GLfloat mat_x, mat_y, mat_z;
+GLfloat mat_specular[]={0.0, 0.0, 1.0, 1.0};
+GLfloat mat_diffuse[]={0.0, 0.0, 1.0, 1.0};
+GLfloat mat_ambient[]={0.0, 0.0, 1.0, 1.0};
+GLfloat mat_shininess={100.0};
+static GLint angle = 3;
+int flag_dance = 0;
+float sec = 0.5;
+GLUquadricObj *t, *gl, *h, *lua, *lla, *rua, *rla, *lll, *rll, *rul, *lul;
+GLUquadricObj *rs, *ls, *rleg, *lleg, *elbow;
+GLUquadricObj *disk;
+double size=1.0;
+int i;
+/*GLuint LoadTexture( const char * filename, int width, int height )
+{
+GLuint texture;
+unsigned char * data;
+FILE * file;
+//The following code will read in our RAW file
+file = fopen( filename, "rb" );
+if ( file == NULL ) return 0;
+data = (unsigned char *)malloc( width * height * 3 );
+fread( data, width * height * 3, 1, file );
+fclose( file );
+glGenTextures( 1, &texture ); //generate the texture with the loaded data
+glBindTexture( GL_TEXTURE_2D, texture ); //bind the texture to it’s array
+glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ); //set texture environment parameters
+glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+//Generate the texture
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+free( data ); //free the texture
+return texture; //return whether it was successfull
+}
+void FreeTexture( GLuint texture )
+{
+glDeleteTextures( 1, &texture );
+}*/
+/*void square (void) {
+glPushMatrix();
+glBindTexture( GL_TEXTURE_2D, texture[0] ); //bind our texture to our shape
+glBegin (GL_QUADS);
+glTexCoord2f(0.0, 0.0); glVertex3f(-5, -5, -010.0);
+glTexCoord2f(0.0, 1.0); glVertex3f(-5, 5, -10.0);
+glTexCoord2f(1.0, 1.0); glVertex3f(5, 5, -10.0);
+glTexCoord2f(1.0, 0.0); glVertex3f(5, -5, -10.0);
+glEnd();
+glBindTexture( GL_TEXTURE_2D, texture[2] ); //bind our texture to our shape
+glBegin (GL_QUADS);
+glTexCoord2f(0.0, 0.0); glVertex3f(-5.0,-5.0, -10.0);
+glTexCoord2f(0.0, 1.0); glVertex3f(-5, 5, -10.0);
+glTexCoord2f(1.0, 1.0); glVertex3f(-10, 10, 0.0);
+glTexCoord2f(1.0, 0.0); glVertex3f(-10, -10, 0.0);
+glEnd();
+glBindTexture( GL_TEXTURE_2D, texture[3] ); //bind our texture to our shape
+glBegin (GL_QUADS);
+glTexCoord2f(0.0, 0.0); glVertex3f(5.0,-5.0, -10.0);
+glTexCoord2f(0.0, 1.0); glVertex3f(5, 5, -10.0);
+glTexCoord2f(1.0, 1.0); glVertex3f(10, 10, 0.0);
+glTexCoord2f(1.0, 0.0); glVertex3f(10, -10, 0.0);
+glEnd();
+glBindTexture( GL_TEXTURE_2D, texture[1] ); //bind our texture to our shape
+glBegin (GL_QUADS);
+glTexCoord2f(0.0, 0.0); glVertex3f(-5.0,-5.0, -10.0);
+glTexCoord2f(0.0, 1.0); glVertex3f(5, -5, -10.0);
+glTexCoord2f(1.0, 1.0); glVertex3f(10, -10, 0.0);
+glTexCoord2f(1.0, 0.0); glVertex3f(-10, -10, 0.0);
+glEnd();
+glPopMatrix();
+}*/
+
+void torso()
+{
+glPushMatrix();
+glRotatef(-90.0, 1.0, 0.0, 0.0);                                    //rotate by90 to get to og position
+gluCylinder(t,TORSO_RADIUS, TORSO_RADIUS*1.5, TORSO_HEIGHT,10,10);  //(*obj, base, top, height, slices, stacks)
+glPopMatrix();
+}
+void head()
+{
+glPushMatrix();
+glTranslatef(0.0, 0.5*HEAD_HEIGHT,0.0);                             //get to og position
+glScalef(HEAD_RADIUS, HEAD_HEIGHT, HEAD_RADIUS);                    //make bigger to adjust to glas_bot size
+gluSphere(h,1.0,10,10);                             
+glPopMatrix();
+}
+void glass_bot()
+{
+glPushMatrix();
+glTranslatef(0.0, 0.5*HEAD_HEIGHT,0.075);                           //get to og position on head
+glRotatef(-90.0, 1.0, 0.0, 0.0);                                  //rotate to fit horizontally on head
+gluCylinder(gl,HEAD_RADIUS, HEAD_RADIUS, HEAD_HEIGHT/2,10,10);
+glPopMatrix();
+}
+void shoulder_joints()
+{
+glPushMatrix();
+glScalef(SHOULDER_RADIUS, SHOULDER_RADIUS, SHOULDER_RADIUS);                //make smaller to become perfect size
+gluSphere(h,1.0,10,10);
+glPopMatrix();
+}
+void elbow_joints()
+{
+glPushMatrix();
+glScalef(SHOULDER_RADIUS/1.2, SHOULDER_RADIUS/1.2, SHOULDER_RADIUS/1.2);    //make smaller to become perfect size
+gluSphere(h,1.0,10,10);
+glPopMatrix();
+}
+void palms()
+{
+glPushMatrix();
+glScalef(SHOULDER_RADIUS/1.3, SHOULDER_RADIUS/1.3, SHOULDER_RADIUS/1.3);   //make smaller to become perfect size
+gluSphere(h,1.0,10,10);
+glPopMatrix();
+}
+void leg_joints()
+{
+glPushMatrix();
+glScalef(JOINT_RADIUS, JOINT_RADIUS, JOINT_RADIUS);                         //make smaller to become perfect size
+gluSphere(h,1.0,10,10);
+glPopMatrix();
+}
+void knee_joints()
+{
+glPushMatrix();
+glScalef(JOINT_RADIUS, JOINT_RADIUS, JOINT_RADIUS);                         //make smaller to become perfect size
+gluSphere(h,1.0,10,10);
+glPopMatrix();
+}
+void torso_disk()
+{
+glPushMatrix();
+glScalef(1.5*TORSO_RADIUS, 0.1, 1.5*TORSO_RADIUS);
+gluSphere(h,1.0,10,10);
+glPopMatrix();
+}
+void left_upper_arm()
+{
+glPushMatrix();
+gluCylinder(lua,UPPER_ARM_RADIUS*1.2, UPPER_ARM_RADIUS, UPPER_ARM_HEIGHT,10,10);
+glPopMatrix();
+}
+void left_lower_arm()
+{
+glPushMatrix();
+gluCylinder(lla,LOWER_ARM_RADIUS*1.1, LOWER_ARM_RADIUS, LOWER_ARM_HEIGHT,10,10);
+glPopMatrix();
+}
+void right_upper_arm()
+{
+glPushMatrix();
+glRotatef(-90.0, 1.0, 0.0, 0.0);                                                    //rotate by 90 to get to og position
+gluCylinder(rua,UPPER_ARM_RADIUS*1.2, UPPER_ARM_RADIUS, UPPER_ARM_HEIGHT,10,10);
+glPopMatrix();
+}
+void right_lower_arm()
+{
+glPushMatrix();
+glRotatef(-90.0, 1.0, 0.0, 0.0);                                                    //rotate by 90 to get to og position
+gluCylinder(rla,LOWER_ARM_RADIUS*1.1, LOWER_ARM_RADIUS, LOWER_ARM_HEIGHT,10,10);
+glPopMatrix();
+}
+void left_upper_leg()
+{
+glColor3f(1.0,0.0,1.0);
+glPushMatrix();
+glRotatef(-120.0, 1.0, 0.0, 0.0);                                                   //rotate by 90 to get to og position
+gluCylinder(lul,UPPER_LEG_RADIUS*1.2, UPPER_LEG_RADIUS, UPPER_LEG_HEIGHT,10,10);
+glPopMatrix();
+}
+void left_lower_leg()
+{
+glColor3f(1.0,0.0,0.0);
+glPushMatrix();
+glTranslatef(0.0,-0.25,-UPPER_LEG_HEIGHT/2);                                        //get to og position
+glRotatef(-70.0, 1.0, 0.0, 0.0);                                                    //rotate by 90 to get to og position
+gluCylinder(lll,LOWER_LEG_RADIUS, LOWER_LEG_RADIUS*1.5, LOWER_LEG_HEIGHT,10,10);
+glPopMatrix();
+}
+void right_upper_leg()
+{
+glColor3f(1.0f,0.0f,1.0f);
+glPushMatrix();
+glRotatef(-120.0, 1.0, 0.0, 0.0);                                                   //rotate by 90 to get to og position
+gluCylinder(rul,UPPER_LEG_RADIUS*1.2, UPPER_LEG_RADIUS, UPPER_LEG_HEIGHT,10,10);
+glPopMatrix();
+}
+void right_lower_leg()
+{
+glColor3f(1.0,0.0,0.0);
+glPushMatrix();
+glTranslatef(0.0,-0.25,-UPPER_LEG_HEIGHT/2);                                        //get to og position
+glRotatef(-70.0, 1.0, 0.0, 0.0);                                                    //rotate by 90 to get to og position
+gluCylinder(rll,LOWER_LEG_RADIUS, LOWER_LEG_RADIUS*1.5, LOWER_LEG_HEIGHT,10,10);
+glPopMatrix();
+}
+void display(void)
+{
+GLfloat rot_x=0.0, rot_y=0.0;
+glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+glLoadIdentity();
+glColor3f(0.0, 0.0, 0.0);
+
+    glScalef(sec, sec, sec);
+    torso();
+
+    glPushMatrix();
+    glTranslatef(0.0, TORSO_HEIGHT+0.5*HEAD_HEIGHT, 0.0);   //setting location of head
+    glTranslatef(0.0, -0.5*HEAD_HEIGHT, 0.0);               //put head slight inside torso
+    head();
+    glass_bot();
+    glPopMatrix();
+
+    //right arm
+
+    glPushMatrix();
+    glTranslatef(-(TORSO_RADIUS+UPPER_ARM_RADIUS), 0.9*TORSO_HEIGHT, 0.0);    //get to og location
+    glRotatef(theta[3], 1.0, 0.0, 0.0);                                    //rotate while dancing
+    left_upper_arm();
+    glTranslatef(0.0, 0.0, UPPER_ARM_HEIGHT);                               //get to og location
+    elbow_joints();                                                             
+    glRotatef(theta[4], 1.0, 0.0, 0.0);                                         //rotate while dancing
+    left_lower_arm();
+    glTranslatef(0.0, 0.0,LOWER_ARM_HEIGHT);                                //set to og location
+    palms(); //left hand
+    glPopMatrix();
+    glPushMatrix();
+    glTranslatef(0.0, TORSO_HEIGHT, 0.0);                                   //get to og location (below head)
+    torso_disk();   
+    glPopMatrix();
+    //shoulder_joints
+    glPushMatrix();
+    glTranslatef(1.5*TORSO_RADIUS, 0.9*TORSO_HEIGHT, 0.0);                //get to og location
+    shoulder_joints();
+    glTranslatef(-3.0*TORSO_RADIUS, 0.0, 0.0);                              //get to og location
+    shoulder_joints();
+    glPopMatrix();
+    //leg_joints
+    glPushMatrix();
+    glTranslatef(1.1*TORSO_RADIUS, 0.0, 0.0);                               //get to og location (left upper leg ball)
+    leg_joints();
+    glTranslatef(-2.2*TORSO_RADIUS, 0.0, 0.0);                              //right leg upper ball (display)
+    shoulder_joints();
+    glPopMatrix();
+    //left arm
+    glPushMatrix();
+    if(flag_dance==0||flag_dance==1)
+    {
+        glTranslatef(TORSO_RADIUS+UPPER_ARM_RADIUS, 0.9*TORSO_HEIGHT, 0.0);     //display right arm full
+        glRotatef(theta[5], 1.0, 0.0, 0.0);                                   //rotate right upper arm while dancing
+    }
+    else if(flag_dance==2)
+    {
+        glTranslatef(TORSO_RADIUS+UPPER_ARM_RADIUS, 0.9*TORSO_HEIGHT, 0.0);
+        glRotatef(theta[5], 1.0, 1.0, 1.0);                                   //rotate right upper arm while dancing
+    }
+    right_upper_arm();
+    glTranslatef(0.0, UPPER_ARM_HEIGHT, 0.0);                               //display elbow joins and right lower arm
+    elbow_joints();
+    if(flag_dance==0||flag_dance==1)
+    {
+        glRotatef(theta[6], 1.0, 0.0, 0.0);                                     //rotate right lower arm while dancing
+    }
+    glColor3f(1.0,1.0,1.0);
+    right_lower_arm();
+    glTranslatef(0.0, LOWER_ARM_HEIGHT, 0.0);                               //display right hand palm ball
+    palms(); //left hand
+    glPopMatrix();
+    glPushMatrix();
+    glTranslatef(-(TORSO_RADIUS), 0.1*UPPER_LEG_HEIGHT, 0.0);             //left leg upper ball to og location
+    glRotatef(theta[7], 1.0, 0.0, 0.0);                                   //display in og location and rotate while dancing
+    left_upper_leg();                                                      
+    glTranslatef(0.0, UPPER_LEG_HEIGHT, -1.5);                              //display left knee+lower leg in position
+    knee_joints();
+    glTranslatef(0.0, 0.0, 1.5);                                                //display left lower leg in position
+    glRotatef(theta[8], 1.0, 0.0, 0.0);                                     //display in og location and rotate while dancing
+    left_lower_leg();
+    glPopMatrix();
+    glPushMatrix();
+    glTranslatef((TORSO_RADIUS), 0.1*UPPER_LEG_HEIGHT, 0.0);              //display right leg in position   
+    glRotatef(theta[9], 1.0, 0.0, 0.0);                                     //display in og location and rotate while dancing
+    right_upper_leg();
+    glTranslatef(0.0, UPPER_LEG_HEIGHT, -1.5);                              //display right knee+lower leg in position
+    knee_joints();
+    glTranslatef(0.0, 0.0, 1.5);                                            //display right lower leg in position
+    glRotatef(theta[10], 1.0, 0.0, 0.0);                                    //display in og location and rotate while dancing
+    right_lower_leg();
+    glPopMatrix();
+
+glFlush();
+glutSwapBuffers();
+//glDisable(GL_TEXTURE_2D);
+}
+
+float getAngle(float freq, float min, float max, float t){
+return (max - min)*sin(freq*M_PI*t) + 0.5*(min + max);
+}
+static void idle(void){
+    GLfloat seconds = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+    
+    if(seconds<=5+17)
+    {
+        sec+=0.0001;
+        theta[3] = getAngle(theta_freq[3], theta_min[3],theta_max[3], seconds);
+        theta[5] = getAngle(theta_freq[5], theta_min[5],theta_max[5], seconds);
+        theta[7] = getAngle(theta_freq[7], theta_min[7],theta_max[7], seconds);
+        theta[9] = getAngle(theta_freq[9], theta_min[9],theta_max[9], seconds);
+        
+        theta[1] = getAngle(theta_freq[1], theta_min[1],theta_max[1], seconds);
+        theta[4] = getAngle(theta_freq[4], theta_min[4],theta_max[4], seconds);
+        theta[6] = getAngle(theta_freq[6], theta_min[6],theta_max[6], seconds);
+        theta[0] = getAngle(theta_freq[0], theta_min[0],theta_max[0], seconds);
+    }    
+    else if(seconds<=6+17)
+    {
+        flag_dance = 1;
+        theta[5] = getAngle(0.60,35,90,seconds); 
+    }
+    else if(seconds<=10+17)
+    {
+        flag_dance = 2;
+        theta[5] = getAngle(4,-4,-12,seconds);
+    }
+    srand(time(NULL));
+    mat_x = rand()%2;
+    mat_y = rand()%2;
+    mat_z = rand()%2;
+
+    glEnable(GL_LIGHT0);
+    glDisable(GL_LIGHT1);
+    glDisable(GL_LIGHT2);
+    glDisable(GL_LIGHT3);
+ 
+    mat_diffuse[0] = mat_x;
+    mat_diffuse[1] = mat_y;
+    mat_diffuse[2] = mat_z;
+    //printf("\ntheta_max[3] = %f ; theta_max[5] = %f\n",theta_max[3],theta_max[5]);
+    //printf("seconds = %f; theta_3 = %f ; theta_5 = %f\n",seconds, theta[3],theta[5]);
+    glutPostRedisplay();
+}
+
+void myReshape(int w, int h)
+{
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    if (w <= h)
+    glOrtho(-10.0, 10.0, -10.0 * (GLfloat) h / (GLfloat) w,
+    10.0 * (GLfloat) h / (GLfloat) w, -10.0, 10.0);
+    else
+    glOrtho(-10.0 * (GLfloat) w / (GLfloat) h,
+    10.0 * (GLfloat) w / (GLfloat) h, -10.0, 10.0, -10.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+void myinit()
+{
+//light 1
+GLfloat light_ambient1[]={0.0, 0.0, 0.0, 1.0};
+GLfloat light_diffuse1[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_specular1[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_position1[]={10.0, 10.0, 10.0, 0.0};
+glLightfv(GL_LIGHT0, GL_POSITION, light_position1);
+glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient1);
+glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse1);
+glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular1);
+//light 2
+GLfloat light_ambient2[]={0.0, 0.0, 0.0, 1.0};
+GLfloat light_diffuse2[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_specular2[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_position2[]={10.0, 0.0, 10.0, 0.0};
+glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
+glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
+glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse2);
+glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular2);
+//light 3
+GLfloat light_ambient3[]={0.0, 0.0, 0.0, 1.0};
+GLfloat light_diffuse3[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_specular3[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_position3[]={0.0, -10.0, 10.0, 0.0};
+glLightfv(GL_LIGHT2, GL_POSITION, light_position3);
+glLightfv(GL_LIGHT2, GL_AMBIENT, light_ambient3);
+glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse3);
+glLightfv(GL_LIGHT2, GL_SPECULAR, light_specular3);
+//light 4
+GLfloat light_ambient4[]={0.0, 0.0, 0.0, 1.0};
+GLfloat light_diffuse4[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_specular4[]={1.0, 1.0, 1.0, 1.0};
+GLfloat light_position4[]={-10.0, 10.0, 10.0, 0.0};
+glLightfv(GL_LIGHT3, GL_POSITION, light_position4);
+glLightfv(GL_LIGHT3, GL_AMBIENT, light_ambient4);
+glLightfv(GL_LIGHT3, GL_DIFFUSE, light_diffuse4);
+glLightfv(GL_LIGHT3, GL_SPECULAR, light_specular4);
+glShadeModel(GL_SMOOTH);
+glEnable(GL_LIGHTING);
+glDepthFunc(GL_LEQUAL);
+glEnable(GL_DEPTH_TEST);
+//glClearColor(0.75, 0.75, 0.75, 1.0);
+glClearColor(0.0, 0.0, 0.0, 1.0);
+glColor3f(0.0, 0.0, 0.0);
+/*    Setting the min, max and frequency for body parts*/
+for(i=0;i<11;i++)
+{
+theta_min[i] = 0.0;
+theta_max[i] = 0.0;
+theta_freq[i] = 0.0;
+}
+theta_min[3] = 135; theta_min[5] = 135;
+theta_freq[1] = 3.0;
+theta_max[1] = 15.0; theta_min[1] = -5.0;
+theta_freq[3] = 2.0; theta_freq[5] = 2.0;
+theta_max[3] = 90.0; theta_max[5] = 180.0;
+theta_freq[4] = 2; theta_freq[6] = 2;
+theta_max[4] = -35.0; theta_max[6] = -35.0;
+theta_min[4] = -10.0; theta_min[6] = -10.0;
+theta_freq[7] = 2.0; theta_freq[9] = 2.0;
+theta_max[7] = 200.0; theta_max[9] = 160.0;
+theta_min[7] = 160.0; theta_min[9] = 200.0;
+theta_min[0] = -30; theta_freq[0] = 0.5;
+theta_max[0] = 30;
+/* allocate quadrics with filled drawing style */
+h=gluNewQuadric();
+gluQuadricDrawStyle(h, GLU_FILL);
+gluQuadricNormals(h, GLU_SMOOTH);
+t=gluNewQuadric();
+gluQuadricDrawStyle(t, GLU_FILL);
+gluQuadricNormals(t, GLU_SMOOTH);
+gl=gluNewQuadric();
+gluQuadricDrawStyle(gl, GLU_FILL);
+gluQuadricNormals(gl, GLU_SMOOTH);
+lua=gluNewQuadric();
+gluQuadricDrawStyle(lua, GLU_FILL);
+gluQuadricNormals(lua, GLU_SMOOTH);
+lla=gluNewQuadric();
+gluQuadricDrawStyle(lla, GLU_FILL);
+gluQuadricNormals(lla, GLU_SMOOTH);
+rua=gluNewQuadric();
+gluQuadricDrawStyle(rua, GLU_FILL);
+gluQuadricNormals(rua, GLU_SMOOTH);
+rla=gluNewQuadric();
+gluQuadricDrawStyle(rla, GLU_FILL);
+gluQuadricNormals(rla, GLU_SMOOTH);
+lul=gluNewQuadric();
+gluQuadricDrawStyle(lul, GLU_FILL);
+gluQuadricNormals(lul, GLU_SMOOTH);
+lll=gluNewQuadric();
+gluQuadricDrawStyle(lll, GLU_FILL);
+gluQuadricNormals(lll, GLU_SMOOTH);
+rul=gluNewQuadric();
+gluQuadricDrawStyle(rul, GLU_FILL);
+gluQuadricNormals(rul, GLU_SMOOTH);
+rll=gluNewQuadric();
+gluQuadricDrawStyle(rll, GLU_FILL);
+gluQuadricNormals(rll, GLU_SMOOTH);
+}
+
+void Write(char *string)
+{
+    while(*string)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *string++);
+}
+
+void dda(float x1,float y1,float x2,float y2)//Line 
+{
+    float dx,dy,steps,i,xinc,yinc;
+    dx=x2-x1;
+    dy=y2-y1;
+    if(abs(dx)>=abs(dy))
+        steps=abs(dx);
+    else
+        steps=abs(dy);
+    
+    xinc=dx/steps;
+    yinc=dy/steps;
+    glBegin(GL_POINTS);
+    glVertex2f(x1,y1);
+    for(i=0;i<=steps;i++)
+    {
+        x1=x1+xinc;
+        y1=y1+yinc;
+        glVertex2f(x1,y1);
+    }
+	glEnd();
+        glFlush();
+}
+void delay(int i)                                //Delay
+{
+    int c,d;
+    for ( c = 1 ; c <= 30000 ; c++ )
+        for ( d = 1 ; d <= 300*i ; d++ )
+            {}           
+    glEnd();
+    glFlush();
+}
+
+void circle(float x1,float y1,float r)
+{
+	glBegin(GL_POINTS);
+	float x=0,y=r;
+	float pk;
+	pk=(5/4)-r;
+	glVertex2f(x,y);
+	while(x<y)
+	{
+		if(pk<=0)
+		{
+			pk=pk+2*x+3;
+			x=x+1;
+
+		}
+		else
+		{
+			pk=pk+2*x-2*y+5;
+			x=x+1;
+			y=y-1;
+		}
+		glVertex2f(x+x1,y+y1);          //1
+		glVertex2f(y+x1,x+y1);          //2
+                glVertex2f(y+x1,-x+y1);         //3
+		glVertex2f(x+x1,-y+y1);         //4		
+		glVertex2f(-x+x1,-y+y1);        //5
+		glVertex2f(-y+x1,-x+y1);        //6
+                glVertex2f(-y+x1,x+y1);         //7
+		glVertex2f(-x+x1,y+y1);         //8
+		
+
+
+
+	}
+	glEnd();
+        glFlush();
+}
+
+void halfcircle(float x1,float y1,float r,int a,int b,int c,int d,int e,int f,int g,int h)
+{
+	glBegin(GL_POINTS);
+        int i;
+	float x=0,y=r;
+	float pk;
+	pk=(5/4)-r;
+	glVertex2f(x,y);
+	while(x<y)
+	{
+		if(pk<=0)
+		{
+			pk=pk+2*x+3;
+			x=x+1;
+		}
+		else
+		{
+			pk=pk+2*x-2*y+5;
+			x=x+1;
+			y=y-1;
+		}
+		if(a==1)
+                    glVertex2f(x+x1,y+y1);          //1
+                if(b==1)
+                    glVertex2f(y+x1,x+y1);          //2
+                if(c==1)
+                    glVertex2f(y+x1,-x+y1);         //3
+		if(d==1)
+                    glVertex2f(x+x1,-y+y1);         //4		
+		if(e==1)
+                    glVertex2f(-x+x1,-y+y1);        //5
+		if(f==1)
+                    glVertex2f(-y+x1,-x+y1);        //6
+                if(g==1)
+                    glVertex2f(-y+x1,x+y1);         //7
+		if(h==1)
+                    glVertex2f(-x+x1,y+y1);         //8
+		
+	}
+	glEnd();
+        glFlush();
+}
+
+const float DEG2RAD = 3.14159/180.0;
+
+void drawEllipse(float xradius, float yradius)
+{
+	glBegin(GL_LINE_LOOP);
+
+	for(int i=0; i < 360; i++)
+	{
+		 //convert degrees into radians
+		float degInRad = i*DEG2RAD;
+		glVertex2f(cos(degInRad)*xradius,sin(degInRad)*yradius);
+	} 
+	glEnd();
+}
+
+void setupEnv()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, 400.0, 0.0, 400.0, 1.0, -1.0);
+
+	glMatrixMode(GL_MODELVIEW);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+}
+
+
+void TillCG()
+{
+    int i=0,j=0,k=0,a=0;
+    glClearColor(0,0,0,0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0f,0.0f,0.0f);                  //Red   
+    for(i=0;i<20;i++)                          //Shoes
+    {          
+        dda(105,25+i,134,25+i);         //left
+        dda(155,25+i,184,25+i);         //right            
+        delay(1);
+    }   
+    for(i=0;i<80;i++)                          //Legs
+    {   glColor3f(1.0f,0.0f,1.0f);
+        dda(115,45+i,134,45+i);         //left
+        dda(155,45+i,174,45+i);         //right             
+        delay(1);
+    }
+        
+    for(i=0;i<10;i++)                          //Body 1
+    {   glColor3f(1.0f,1.0f,0.0f);       
+        dda(105,125+i,184,125+i);
+        delay(1);
+    }
+    for(i=0;i<80;i++)                          //Body 2
+    {   glColor3f(0.0f,1.0f,0.0f);       
+        dda(105,135+i,114,135+i);       //left
+        dda(175,135+i,184,135+i);       //right
+        delay(1);
+    }
+    for(i=0;i<10;i++)                          //Body 3
+    {   glColor3f(0.0f,0.0f,1.0f);      
+        dda(105,215+i,184,215+i);
+        delay(1);
+    }
+                                                                               
+    for(i=0;i<10;i++)                          //Neck
+    {          
+        dda(135,225+i,154,225+i);
+        delay(1);
+    }
+        
+    for(i=0;i<40;i++)                           //Head 1
+    {          
+        dda(144-i,235,145+i,235);
+        delay(1);
+    }
+    for(i=0;i<40;i++)                           //Head 2
+    {          
+        dda(105,235,105,235+i);         //left
+        dda(185,235,185,235+i);         //right
+        delay(1);
+    }
+    for(i=0;i<40;i++)                           //Head 3
+    {          
+        dda(105,275,105+i,275);         //left
+        dda(185,275,185-i,275);         //right
+        delay(1);
+    }
+    
+    for(i=0;i<=5;i++)                           //Eyes
+    {
+        glColor3f(1.0f,1.0f,1.0f);              //White           
+        circle(125,265,5+i);            //left
+        circle(165,265,5+i);            //right
+        delay(1);delay(1);
+    }
+    glColor3f(1.0f,0.0f,0.0f);                  //Red
+    dda(137.9,242.93,152.,242.93);
+    halfcircle(145,250,10,0,0,0,1,1,0,0,0);     //Smile
+    
+    for(i=0;i<10;i++)                           //Hands 1
+    {
+        dda(104-i,225,104-i,205);       //left
+        dda(186+i,225,186+i,205);       //right
+        delay(1);
+    }
+    for(i=0;i<50;i++)                           //Hands 2
+    {   glColor3f(0.0f,0.0f,1.0f);
+        dda(94-i,220,94-i,210);         //left
+        dda(196+i,220,196+i,210);       //right
+        delay(1);
+    }
+    for(i=0;i<10;i++)                           //Hands 3(Fingers)
+    {   glColor3f(1.0f,0.0f,1.0f);
+        dda(44-i,224,44-i,204);         //left
+        dda(246+i,224,246+i,204);       //right
+        delay(1);
+    }
+    
+    for(i=0;i<10;i++)                           //Ears
+    {
+        halfcircle(105,255,i,0,0,0,0,1,1,1,1);//left
+        halfcircle(185,255,i,1,1,1,1,0,0,0,0);//right
+        delay(1);
+    }
+    for(a=0;a<3;a++)
+    {
+    for(i=0;i<10;i++)                           //HeartBeat 1                           
+    {
+       dda(116,175,116+i,175);
+       delay(1);
+    }
+   
+    for(i=0,j=0;i<10;i++,j+=3)                  //HeartBeat 2
+    {
+        dda(126,175,126+i,175+j);
+        glColor3f(0.0f,0.0f,0.0f);              //Black
+        dda(116,175,116+i,175);
+        glColor3f(1.0f,0.0f,0.0f);              //Red
+        delay(1);
+    }
+    for(i=0,j=0;i<10;i++,j+=3)                  //HeartBeat 3
+    {
+        dda(136,205,136+i,205-j);
+        glColor3f(0.0f,0.0f,0.0f);              //Black
+        dda(126,175,126+i,175+j);
+        glColor3f(1.0f,0.0f,0.0f);              //Red
+        delay(1);
+    }    
+    for(i=0,j=0;i<10;i++,j+=3)                  //HeartBeat 4
+    {
+        dda(146,175,146+i,175-j);
+        glColor3f(0.0f,0.0f,0.0f);              //Black
+        dda(136,205,136+i,205-j);
+        glColor3f(1.0f,0.0f,0.0f);              //Red
+        delay(1);
+    }
+    for(i=0,j=0;i<10;i++,j+=3)                  //HeartBeat 5
+    {
+        dda(156,145,156+i,145+j);
+        glColor3f(0.0f,0.0f,0.0f);              //Black
+        dda(146,175,146+i,175-j);
+        glColor3f(1.0f,0.0f,0.0f);              //Red
+        delay(1);
+    }
+    for(i=0,j=0,k=0;i<10 || k<9;k++,i++,j+=3)   //HeartBeat 6
+    {   if(k<9)
+            dda(165,175,165+k,175);
+        glColor3f(0.0f,0.0f,0.0f);              //Black
+        dda(156,145,156+i,145+j);
+        glColor3f(1.0f,0.0f,0.0f);              //Red
+        delay(1);
+    }for(i=0;i<9;i++)                           //HeartBeat 7
+    {       
+        glColor3f(0.0f,0.0f,0.0f);              //Black
+        dda(165,175,165+i,175);
+        glColor3f(1.0f,0.0f,0.0f);              //Red
+        delay(1);
+    }
+    }
+    
+    for(i=0;i<5;i++)                           //CG 1
+    {
+        dda(135+i,180,135+i,210);       //C
+        dda(135+i,140,135+i,170);       //G
+        delay(1);
+    }
+    for(i=0;i<10;i++)                           //CG 2
+    {
+        dda(140+i,205,140+i,210);       //C
+        dda(140+i,180,140+i,185);
+        dda(140+i,165,140+i,170);       //G
+        dda(140+i,140,140+i,145);
+        if(i>5)
+            dda(140+i,152.5,140+i,157.5);
+        delay(1);
+    }
+    for(i=0;i<5;i++)                            //CG 3
+    {
+        dda(150+i,205,150+i,210);       //C
+        dda(150+i,180,150+i,185);
+        dda(150+i,165,150+i,170);       //G
+        dda(150+i,140,150+i,157.5);
+        delay(1);
+    }
+    
+    glColor3f(1,1,1);
+    delay(20);                                    //Thiking 1
+    glTranslatef(149,290,0);
+    drawEllipse(10,5);
+    glFlush();
+}
+
+
+/*
+void disp1()
+{   
+    glClear(GL_COLOR_BUFFER_BIT);
+    glTranslatef(150,199,0);
+    glFlush();delay(1);delay(1);
+    
+    drawEllipse(150,100);
+    glTranslatef(0,-137,0);
+    glFlush();delay(1);delay(1);
+    
+    drawEllipse(40,20);
+    glTranslatef(0,-40,0);
+    glFlush();delay(1);delay(1);
+    
+    drawEllipse(20,10);
+    glTranslatef(0,-20,0);
+    glFlush();delay(1);delay(1);
+    
+    glColor3f(1,0,0);
+    glRasterPos2f(-90,205); 
+    Write("7668 MELITA SALDANHA");
+    glColor3f(0,1,0);
+    glRasterPos2f(-90,185);
+    Write("7670 SHRIYA SHET");
+    glColor3f(0,0,1);
+    glRasterPos2f(-90,165);
+    Write("7674 ASHLEY TUSCANO");
+    glFlush();
+}
+*/
+
+void disp2()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    glTranslatef(149,20,0);                         // 1
+    delay(50);
+    drawEllipse(20,10);   
+    glFlush();
+    
+    glTranslatef(0,40,0);                           // 2
+    delay(50);
+    drawEllipse(40,20);   
+    glFlush();
+    
+    glTranslatef(0,139,0);                          // 3
+    delay(50);
+    drawEllipse(150,100);   
+    glFlush();
+    
+    glTranslatef(0,-199,0);                         // making the origin proper
+    
+    glColor3f(1,0,0);
+    glRasterPos2f(-100,215);
+    delay(25);
+    Write("7668 MELITA SALDANHA");
+    glFlush();
+    
+    glColor3f(0,1,0);
+    glRasterPos2f(-100,185);
+    delay(25);
+    Write("7670 SHRIYA SHET");
+    glFlush();
+    
+    glColor3f(0,0,1);
+    glRasterPos2f(-100,155);
+    delay(25);
+    Write("7674 ASHLEY TUSCANO");
+    glFlush();
+    delay(50);
+}
+void disp()
+{
+    TillCG();
+}
+
+int main(int argc, char **argv)
+{
+glutInit(&argc, argv);
+glutInitWindowPosition(1050,350);
+glutInitWindowSize(300,300);
+glutCreateWindow("<<Mercury>>");      
+gluOrtho2D(0,300,0,300);
+glutDisplayFunc(disp);
+        
+glutInitWindowPosition(1050,50);
+glutInitWindowSize(300,300);
+glutCreateWindow("<<Shriya>>");      
+gluOrtho2D(0,300,0,300);
+glutDisplayFunc(disp2);
+
+glutInitWindowPosition(0,0);
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+glutInitWindowSize(1000, 800);
+glutCreateWindow("<<Melita>>");
+myinit();
+glutReshapeFunc(myReshape);
+glutDisplayFunc(display);
+glutIdleFunc(idle);
+glutMainLoop();
+return 0;
+}
