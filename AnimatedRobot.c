@@ -26,6 +26,10 @@ int stackIncompCount = 0;
 int writingCount = 0;
 int stackCompCount = 0;
 char s[50]="",s1[50]="",s2[50]="",s3[50]="";
+/*
+ *Adjust the time(seconds)
+ *according to the time taken by the 1st two windows.
+ */
 int previousWindowTime = 24;
 int light_flag = 0;
 typedef float point[3];
