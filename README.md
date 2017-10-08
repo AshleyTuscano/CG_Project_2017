@@ -3,7 +3,7 @@ College Project
 ==========================================
 Group Project
 Ashley Tuscano
-Shriya Shet
+Shriya She
 Melita Saldanha
 ==========================================
 Its an animated Robot.
