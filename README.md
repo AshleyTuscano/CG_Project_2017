@@ -7,4 +7,4 @@ Shriya Shet
 Melita Saldanha
 ==========================================
 Its an animated Robot.
-Done with C and and OpenGL.
+Done with C and and OpenGL
