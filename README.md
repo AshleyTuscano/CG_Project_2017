@@ -1,5 +1,5 @@
-# CG_Project_2017
-College Project
+#College Project
+#CG_Project_2017
 ==========================================
 Group Project by,
 Ashley Tuscano
