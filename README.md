@@ -1,9 +1,9 @@
 # CG_Project_2017
 College Project
 ==========================================
-Group Project
+Group Project by,
 Ashley Tuscano
-Shriya She
+Shriya Shet
 Melita Saldanha
 ==========================================
 Its an animated Robot.
