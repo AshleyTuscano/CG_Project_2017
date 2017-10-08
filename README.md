@@ -1,34 +1,34 @@
- #College Project
+           #College Project
  
  
  
- #CG_Project_2017
+           #CG_Project_2017
  
  
  
- ========================================== 
+========================================== 
  
  
  
- Group Project by,
+           Group Project by,
   
  
  
- Ashley Tuscano
+            Ashley Tuscano
   
  
  
- Shriya Shet
+             Shriya Shet
   
  
  
- Melita Saldanha
+           Melita Saldanha
   
  
  
- ==========================================
+==========================================
   
  
  
- Its an animated Robot.
- Using C and and OpenGL
+         Its an animated Robot.
+         Using C and and OpenGL
