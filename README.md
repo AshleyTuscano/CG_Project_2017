@@ -15,4 +15,4 @@
 ==========================================
 
          Its an animated Robot.      
-         Using C and and OpenGL
+ Using C and glut utility tool in OpenGL.
